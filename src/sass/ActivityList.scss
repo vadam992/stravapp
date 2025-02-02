@@ -1,0 +1,43 @@
+.ac-list {
+    padding-top: 100px;
+    
+    .ac-list__card {
+        padding: 15px;
+        margin: 5px;
+        border: 1px solid #000;
+        border-radius: 5px;
+
+        .ac-list__title {
+            margin-bottom: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            font-family: "Roboto Slab", serif;
+        }
+
+        .ac-list__date {
+            font-size: 18px;
+            font-family: "Roboto Slab", serif;
+        }
+
+        .ac-list__button {
+            
+            text-align: right;
+
+            a {
+                padding: 2px 10px;
+                background-color: #fc5200;
+                border: 2px solid #fc5200;
+                border-radius: 5px;
+                text-decoration: none;
+                color: #fff;
+                font-weight: bold;
+                font-family: "Roboto Slab", serif;
+
+                &:hover {
+                    background-color: #fff;
+                    color: #fc5200;
+                }
+            }
+        }
+    }
+}
