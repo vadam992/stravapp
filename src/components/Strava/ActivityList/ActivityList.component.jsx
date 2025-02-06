@@ -19,17 +19,24 @@ const ActivityList = () => {
   const scope = process.env.REACT_APP_SCOPE; // Szükséges engedélyek
 
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const code = query.get("code");
+    const expiresAt = localStorage.getItem("expires_at");
+    const token = localStorage.getItem("access_token");
 
-    if (code) {
-      // Ha van kód az URL-ben, cseréljük tokenre
-      exchangeToken(code);
-    } else {
-      const token = localStorage.getItem("access_token");
-      if (token) {
+    if (token && expiresAt) {
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (currentTime >= expiresAt) {
+        refreshToken();
+      } else {
         setIsAuthorized(true);
         fetchProfile(token);
+      }
+    } else {
+      const query = new URLSearchParams(window.location.search);
+      const code = query.get("code");
+      if (code) {
+        exchangeToken(code);
+      } else {
+        setIsAuthorized(false); // Ha nincs token, állítsd false-ra
       }
     }
   }, []);
@@ -43,19 +50,52 @@ const ActivityList = () => {
         code: code,
         grant_type: "authorization_code",
       });
-
-      const { access_token, refresh_token } = response.data;
-
+  
+      const { access_token, refresh_token, expires_at } = response.data;
+      
       // Tokenek mentése helyi tárolóba
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("refresh_token", refresh_token);
-
+      localStorage.setItem("expires_at", expires_at);
+  
       setIsAuthorized(true);
       fetchProfile(access_token);
     } catch (error) {
       console.error("Error exchanging token:", error);
     }
   };
+  
+
+  const refreshToken = async () => {
+    const refresh_token = localStorage.getItem("refresh_token");
+  
+    if (!refresh_token) {
+      setIsAuthorized(false);
+      return;
+    }
+  
+    try {
+      const response = await axios.post("https://www.strava.com/oauth/token", {
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refresh_token,
+        grant_type: "refresh_token",
+      });
+  
+      const { access_token, refresh_token: new_refresh_token, expires_at } = response.data;
+  
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", new_refresh_token);
+      localStorage.setItem("expires_at", expires_at);
+  
+      setIsAuthorized(true);
+      fetchProfile(access_token); // Ne felejtsd el újra betölteni az adatokat!
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      setIsAuthorized(false);
+    }
+  };
+  
 
   // Felhasználói profil lekérése
   const fetchProfile = async (token) => {
@@ -83,7 +123,6 @@ const ActivityList = () => {
   //Szűrés évre és hónapra
   const handleFilters = (year, month) => {
     setFilters({ year, month });
-    console.log("Filters received in parent:", { year, month });
 
     if (!year && !month) {
       setFilteredActivities(activities); // Ha nincs szűrő, mutassa az összeset
