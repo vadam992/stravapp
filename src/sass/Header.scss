@@ -27,4 +27,28 @@
         border-top-right-radius: 22px;
         border-bottom-right-radius: 22px;
     }
+
+    nav {
+        padding: 10px;
+
+        ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+          }
+
+          li {
+            display: inline;
+
+            a {
+                color: #000;
+                text-decoration: none;
+                font-weight: bold;
+
+                &:hover {
+                    color:#fc5200;
+                }
+            }
+        }
+    } 
 }
