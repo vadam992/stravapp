@@ -34,7 +34,7 @@ export const saveToken = (accessToken, refreshToken, expiresAt) => {
 
 export const isTokenExpired = () => {
   const expiresAt = localStorage.getItem('expires_at');
-  if (!expiresAt) return true;
+  if (!expiresAt) return true; //If not expire time
   return Math.floor(Date.now() / 1000) >= expiresAt;
 };
 

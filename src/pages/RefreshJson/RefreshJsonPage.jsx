@@ -21,17 +21,33 @@ const RefreshJsonPage = () => {
 
     // 2. API hívás Stravához
     const fetchActivities = async () => {
-      try {
-        const token = localStorage.getItem('access_token');
-        const response = await axios.get(
-          'https://www.strava.com/api/v3/athlete/activities',
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { per_page: 200, page: 1 },
-          }
-        );
+      let allActivities = [];
+      let page = 1;
+      let hasMoreData = true;
+      const accessToken = localStorage.getItem('access_token');
 
-        setActivities(response.data);
+      try {
+        while (hasMoreData) {
+          const response = await fetch(
+            `https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=200`,
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
+
+          if (!response.ok)
+            throw new Error(`HTTP error! Status: ${response.status}`);
+
+          const data = await response.json();
+          if (data.length === 0) {
+            hasMoreData = false;
+          } else {
+            allActivities = [...allActivities, ...data];
+            page++;
+          }
+        }
+
+        setActivities(allActivities);
       } catch (error) {
         console.error('Error fetching activities:', error);
       }
@@ -49,7 +65,7 @@ const RefreshJsonPage = () => {
 
     const newActivities = activities.filter(act => !existingIds.has(act.id));
 
-    const updatedList = [...storedActivities, ...newActivities];
+    const updatedList = [...newActivities, ...storedActivities];
     setMergedActivities(updatedList);
 
     // 4. Frissített adatokat elmentjük
@@ -90,6 +106,7 @@ const RefreshJsonPage = () => {
           </div>
         </div>
         <div className="row">
+          {mergedActivities.length}
           <ul>
             {mergedActivities.map(activity => (
               <li key={activity.id}>
