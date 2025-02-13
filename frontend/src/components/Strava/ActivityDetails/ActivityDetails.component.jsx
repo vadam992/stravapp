@@ -1,9 +1,9 @@
-import React, { act, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import ActivityGPX from '../ActivityGPX/ActivityGPX.component';
-import '../../../sass/ActivityDetail.scss';
+import '../../../styles/ActivityDetail.scss';
 import ActivityElevation from "../ActivityElevation/ActivityElevation";
 
 const ActivityDetails = () => {

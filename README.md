@@ -1,6 +1,6 @@
-# Project install
+# Project install (Frontend)
 
-1. npm install in root folder
+1. npm install in frontend root folder
 2. Create .env and copy this environment variable and fill your data
 
 ```
@@ -11,3 +11,27 @@ REACT_APP_SCOPE="read,activity:read"
 ```
 
 3. npm start
+
+# Project install (Backend)
+
+1. npm install in backend root folder
+2. npm start
+3. http://localhost:5000
+
+### A typical top-level directory layout
+
+    stravapp
+    ├── frontend
+    │   ├── public             # public files
+    │   ├── src
+    │   │   ├── api            # API functions
+    │   │   ├── auth           # Authorization functions
+    │   │   ├── components     # Frontend components
+    │   │   ├── hooks          # Hooks functions
+    │   │   ├── pages          # Web pages components
+    │   │   ├── routes         # Routes settings
+    │   │   ├── styles         # Styles with sass
+    │   ├── .env               # environment variables
+    ├── backend
+    │   ├── server.js          # main server
+    └── README.md

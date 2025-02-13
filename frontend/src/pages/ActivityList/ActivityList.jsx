@@ -3,7 +3,7 @@ import { useActivities } from '../../hooks/useActivities';
 import SearchFilters from '../../components/SearchBox/SearchBox.component';
 import ActivityList from '../../components/Strava/ActivityList/ActivityList.component';
 import Connect from '../../components/Strava/Connection/Connect.component';
-import '../../sass/ActivityList.scss';
+import '../../styles/ActivityList.scss';
 
 const ActivityListPage = () => {
   const {
