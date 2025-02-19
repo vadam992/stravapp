@@ -1,19 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchActivities } from '../api/api';
-import {
-  getAuthUrl,
-  isAuthorized as checkAuthorization,
-  getStoredToken,
-  refreshToken,
-  isTokenExpired,
-  getToken,
-  saveToken,
-} from '../auth/auth';
+import { authenticateStrava, getDataFromStrava } from '../api/api';
+import { getAuthUrl } from '../auth/auth';
 
 export const useActivities = (initialState = { visibleCount: 12 }) => {
   const [activities, setActivities] = useState(null);
   const [filteredActivities, setFilteredActivities] = useState([]);
-  const [isAuthorized, setIsAuthorized] = useState(checkAuthorization());
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [visibleCount, setVisibleCount] = useState(initialState.visibleCount);
   const fetched = useRef(false);
 
@@ -22,39 +14,24 @@ export const useActivities = (initialState = { visibleCount: 12 }) => {
       if (fetched.current) return; //Just once allow API calling
       fetched.current = true;
 
-      let token = getStoredToken();
+      let token = null;
       const query = new URLSearchParams(window.location.search);
       const code = query.get('code');
 
       try {
         if (code != null) {
-          if (token == null || isTokenExpired()) {
-            const { access_token, refresh_token, expires_at } =
-              await getToken(code);
-            saveToken(access_token, refresh_token, expires_at);
-            token = access_token;
-
+          token = await authenticateStrava(code);
+          if (token) {
             setIsAuthorized(true);
             window.history.replaceState(
               {},
               document.title,
               window.location.pathname
             );
-          } else {
-            const refreshTokenData = await refreshToken();
-            saveToken(
-              refreshTokenData.access_token,
-              refreshTokenData.refresh_token,
-              refreshTokenData.expires_at
-            );
-            token = refreshTokenData.access_token;
+            const data = await getDataFromStrava();
+            setActivities(data);
+            setFilteredActivities(data);
           }
-        }
-
-        if (token) {
-          const data = await fetchActivities(token);
-          setActivities(data);
-          setFilteredActivities(data);
         }
       } catch (error) {
         console.error('Token exchange failed:', error);

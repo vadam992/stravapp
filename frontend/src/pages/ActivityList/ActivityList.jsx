@@ -10,7 +10,6 @@ const ActivityListPage = () => {
     filteredActivities,
     handleFilters,
     handleAuth,
-    isLoading,
     isAuthorized,
     visibleCount,
     setVisibleCount,
@@ -20,9 +19,9 @@ const ActivityListPage = () => {
     return <Connect handleAuth={handleAuth} />;
   }
 
-  if (isLoading) {
+  /*if (isLoading) {
     return <div>Loading profile...</div>;
-  }
+  }*/
 
   return (
     <div className="ac-list">

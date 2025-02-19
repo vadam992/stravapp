@@ -1,10 +1,21 @@
 import React from 'react';
+import '../../../styles/Connection.scss';
 
 const Connect = ({ handleAuth }) => (
-    <div>
-        <h1>Authorize Strava</h1>
-        <button onClick={handleAuth}>Authorize with Strava</button>
+  <div className="section-connection">
+    <div className="container center">
+      <div className="row">
+        <div className="col-lg-12">
+          <div className="connection-box">
+            <h1>Authorize with Strava</h1>
+            <button className="connection-button" onClick={handleAuth}>
+              Connect
+            </button>
+          </div>
+        </div>
       </div>
-  );
-  
-  export default Connect;
+    </div>
+  </div>
+);
+
+export default Connect;

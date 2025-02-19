@@ -53,8 +53,8 @@ const RefreshJsonPage = () => {
       }
     };
 
-    fetchStoredActivities();
-    fetchActivities();
+    //fetchStoredActivities();
+    //fetchActivities();
   }, []);
 
   useEffect(() => {
@@ -86,8 +86,42 @@ const RefreshJsonPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const getDataFromStrava = () => {
-    console.log(inputValue);
+  const getAuthUrl = () => {
+    const clientId = process.env.REACT_APP_CLIENT_ID;
+    const redirectUri = process.env.REACT_APP_REDIRECT_URI;
+    const scope = process.env.REACT_APP_SCOPE;
+
+    return `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+  };
+
+  const authToStrava = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+      const response = await authenticateStrava(code);
+      alert(response.token);
+    }
+  };
+
+  const authenticateStrava = async code => {
+    const response = await fetch('http://localhost:5000/api/auth/strava', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+
+    return response.json();
+  };
+
+  const getDataFromStrava = async () => {
+    const response = await fetch('http://localhost:5000/api/strava/data', {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    console.log(response.json());
   };
 
   return (
@@ -97,12 +131,11 @@ const RefreshJsonPage = () => {
           <div className="col-12">
             <h2>Activity List</h2>
             <button onClick={downloadJSON}>Download JSON</button>
-            <input
-              type="number"
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-            />
             <button onClick={getDataFromStrava}>Get Data from Strava</button>
+            <a href="https://www.strava.com/oauth/authorize?client_id=145447&redirect_uri=http://localhost:3000/refresh-data&response_type=code&scope=read,activity:read">
+              Connect Strava
+            </a>
+            <button onClick={authToStrava}>Authenticate</button>
           </div>
         </div>
         <div className="row">

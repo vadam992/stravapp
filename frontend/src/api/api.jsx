@@ -14,3 +14,23 @@ export const fetchActivities = async token => {
     throw error;
   }
 };
+
+export const authenticateStrava = async code => {
+  const response = await fetch('http://localhost:5000/api/auth/strava', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+
+  return response.json();
+};
+
+export const getDataFromStrava = async () => {
+  const response = await fetch('http://localhost:5000/api/strava/data', {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  return response.json();
+};
