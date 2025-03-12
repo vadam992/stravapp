@@ -18,6 +18,22 @@ const STRAVA_AUTH_URL = "https://www.strava.com/oauth/token";
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
+app.get("/api/check-auth", (req, res) => {
+  const { access_token, expires_at } = req.cookies;
+
+  if (!access_token) {
+    return res.json({ authenticated: false, message: "No token found" });
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  if (expires_at && now >= expires_at) {
+    return res.json({ authenticated: false, message: "Token expired" });
+  }
+
+  res.json({ authenticated: true, message: "Token is valid" });
+});
+
 // 🔹 1. STRAVA TOKEN LEKÉRÉSE
 app.post("/api/auth/strava", async (req, res) => {
   const { code } = req.body;
@@ -97,6 +113,61 @@ app.get("/api/strava/data", async (req, res) => {
     hasMoreData = false;
 
     res.status(500).json({ message: "Failed to fetch data" });
+  }
+});
+
+app.get("/api/activity/:id", async (req, res) => {
+  const activityId = req.params.id;
+  const accessToken = req.cookies.access_token;
+
+  if (!accessToken) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  try {
+    const response = await axios.get(
+      `https://www.strava.com/api/v3/activities/${activityId}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(
+      "Hiba az aktivitás lekérésénél:",
+      error.response?.data || error
+    );
+    res.status(500).json({ error: "Nem sikerült lekérni az aktivitást" });
+  }
+});
+
+app.get("/api/stream/:id", async (req, res) => {
+  const activityId = req.params.id;
+  const accessToken = req.cookies.access_token;
+
+  if (!accessToken) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  try {
+    const response = await axios.get(
+      `https://www.strava.com/api/v3/activities/${activityId}/streams`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          keys: "latlng,time,altitude",
+          key_by_type: true,
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("Hiba a stream lekérésénél:", error.response?.data || error);
+    res.status(500).json({ error: "Nem sikerült lekérni az stream-et" });
   }
 });
 
