@@ -13,20 +13,31 @@ const ActivityListPage = () => {
     isAuthorized,
     visibleCount,
     setVisibleCount,
+    status,
+    error,
   } = useActivities({ visibleCount: 12 });
 
   if (!isAuthorized) {
     return <Connect handleAuth={handleAuth} />;
   }
 
-  /*if (isLoading) {
-    return <div>Loading profile...</div>;
-  }*/
+  if (status === 'loading')
+    return (
+      <div className="ac-list">
+        <div className="container">
+          <p>Adatok betöltése...</p>
+        </div>
+      </div>
+    );
+  if (status === 'failed') return <p>Hiba történt: {error}</p>;
 
   return (
     <div className="ac-list">
       <div className="container">
-        <SearchFilters onApplyFilters={handleFilters} onResetVisibleCount={() => setVisibleCount(12)}/>
+        <SearchFilters
+          onApplyFilters={handleFilters}
+          onResetVisibleCount={() => setVisibleCount(12)}
+        />
         <ActivityList
           activities={filteredActivities}
           visibleCount={visibleCount}

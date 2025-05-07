@@ -52,12 +52,12 @@ const SearchBox = ({ onApplyFilters, onResetVisibleCount }) => {
         </div>
         <div className="row mb-3">
           <div className="col-md-6">
-            <button className="btn btn-primary" onClick={handleFilterChange}>
+            <button className="button yellow" onClick={handleFilterChange}>
               Apply Filters
             </button>
           </div>
           <div className="col-md-6">
-            <button className="btn btn-secondary" onClick={handleResetFilters}>
+            <button className="button yellow" onClick={handleResetFilters}>
               Reset Filters
             </button>
           </div>

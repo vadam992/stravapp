@@ -26,7 +26,7 @@ const ActivityGrid = ({ activities, visibleCount, setVisibleCount }) => {
       <div className="col-12">
         {visibleCount < activities.length && (
           <div className="text-center mt-3">
-            <button className="btn btn-primary" onClick={loadMore}>
+            <button className="button yellow" onClick={loadMore}>
               További betöltés
             </button>
           </div>

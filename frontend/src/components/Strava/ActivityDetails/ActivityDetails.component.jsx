@@ -1,86 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getActivityDetails, getActivityStream } from '../../../api/api';
 
 import ActivityGPX from '../ActivityGPX/ActivityGPX.component';
 import '../../../styles/ActivityDetail.scss';
-import ActivityElevation from "../ActivityElevation/ActivityElevation";
+import ActivityElevation from '../ActivityElevation/ActivityElevation';
 
 const ActivityDetails = () => {
   const { id } = useParams(); // Az aktivitás ID-ja az URL-ből
   const [activity, setActivity] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [gpxData, setGpxData] = useState(null);
+  const fetched = useRef(false);
 
   useEffect(() => {
-    const fetchActivityDetails = async () => {
-      const accessToken = localStorage.getItem("access_token");
-
-      if (!accessToken) {
-        setError("Access token is missing. Please authorize the application.");
-        setLoading(false);
-        return;
-      }
-
+    const activityDetails = async () => {
       try {
-        const response = await axios.get(
-          `https://www.strava.com/api/v3/activities/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        const response = await getActivityDetails(id);
 
-        setActivity(response.data);
+        setActivity(response);
       } catch (err) {
-        setError("Failed to fetch activity details.");
-      } finally {
-        setLoading(false);
+        setError('Failed to fetch activity details.');
       }
     };
 
-    fetchActivityDetails();
+    activityDetails();
   }, [id]);
 
   useEffect(() => {
     const fetchActivityStream = async () => {
       if (!activity) return; // Csak akkor hívjuk le, ha van aktivitás adat
-      
-      const accessToken = localStorage.getItem("access_token");
-
-      if (!accessToken) {
-        setError("Access token is missing. Please authorize the application.");
-        return;
-      }
 
       try {
-        const response = await axios.get(
-          `https://www.strava.com/api/v3/activities/${activity.id}/streams`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-            params: {
-              keys: "latlng,time,altitude",
-              key_by_type: true,
-            },
-          }
-        );
-
-        const { latlng, time, altitude } = response.data;
+        const response = await getActivityStream(id);
+        const { latlng, time, altitude } = response;
 
         if (!latlng || !latlng.data) {
-          setError("No GPS data available for this activity.");
+          setError('No GPS data available for this activity.');
           return;
         }
 
         const gpx = generateGPX(latlng.data, time?.data, altitude?.data);
         setGpxData(gpx);
       } catch (err) {
-        setError("Failed to fetch activity stream.");
+        setError('Failed to fetch activity stream.');
       }
     };
 
@@ -95,7 +59,9 @@ const ActivityDetails = () => {
 
     latlngData.forEach((point, index) => {
       const [lat, lng] = point;
-      const time = timeData ? new Date(timeData[index] * 1000).toISOString() : null;
+      const time = timeData
+        ? new Date(timeData[index] * 1000).toISOString()
+        : null;
       const ele = altitudeData ? altitudeData[index] : null;
 
       gpx += `<trkpt lat="${lat}" lon="${lng}">\n`;
@@ -113,32 +79,52 @@ const ActivityDetails = () => {
     return gpx;
   };
 
-  if (loading) return <div>Loading activity details...</div>;
+  const msToKmh = mps => (mps * 3.6).toFixed(1);
+
+  const convertSeconds = seconds => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${hours}:${minutes}:${remainingSeconds}`;
+  };
+
+  if (!activity) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-console.log(activity)
+
   return (
     <div className="activity_detail">
       <div className="container">
         <div className="row">
+          <div className="col-lg-12">
+            <button className="button yellow" onClick={() => navigate(-1)}>
+              Back to List
+            </button>
+          </div>
+        </div>
+        <div className="row">
           <div className="col-6">
             <h1>{activity.name}</h1>
-            <button onClick={() => navigate(-1)}>Back to List</button>
             <p>Date: {new Date(activity.start_date).toLocaleDateString()}</p>
             <p>Distance: {(activity.distance / 1000).toFixed(2)} km</p>
             <p>Time: {(activity.moving_time / 60).toFixed(2)} minutes</p>
             <p>Elevation Gain: {activity.total_elevation_gain} m</p>
-            <p>Type: {activity.type}</p>
+            <p>Average Speed: {msToKmh(activity.average_speed)} km/h</p>
+            <p>Calories: {activity.calories}</p>
+            <p>Avg Temp: {activity.average_temp} °C</p>
+            <p>Elevtion high: {activity.elev_high}</p>
+            <p>Elevtion low: {activity.elev_low}</p>
+            <p>Max Speed: {msToKmh(activity.max_speed)} km/h</p>
+            <p>Moving Time: {convertSeconds(activity.moving_time)}</p>
           </div>
           <div className="col-6">
             <div>{<ActivityGPX activityId={activity.id} />}</div>
           </div>
           <div className="col-12">
-            <ActivityElevation gpxUrl={ gpxData } />
+            <ActivityElevation gpxUrl={gpxData} />
           </div>
         </div>
       </div>
-      
-      
     </div>
   );
 };

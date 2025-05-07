@@ -120,8 +120,6 @@ const RefreshJsonPage = () => {
       method: 'GET',
       credentials: 'include',
     });
-
-    console.log(response.json());
   };
 
   return (

@@ -1,37 +1,46 @@
 import { useState, useEffect, useRef } from 'react';
-import { authenticateStrava, getDataFromStrava } from '../api/api';
+import { authenticateStrava, checkAuth } from '../api/api';
 import { getAuthUrl } from '../auth/auth';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchStravaData } from '../data/stravaSlice';
 
 export const useActivities = (initialState = { visibleCount: 12 }) => {
   const [activities, setActivities] = useState(null);
   const [filteredActivities, setFilteredActivities] = useState([]);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(null);
   const [visibleCount, setVisibleCount] = useState(initialState.visibleCount);
   const fetched = useRef(false);
+  const dispatch = useDispatch();
+  const { data, status, error } = useSelector(state => state.strava);
 
   useEffect(() => {
     const loadActivities = async () => {
-      if (fetched.current) return; //Just once allow API calling
+      if (fetched.current) return; // Just once allow API calling
       fetched.current = true;
 
-      let token = null;
       const query = new URLSearchParams(window.location.search);
       const code = query.get('code');
 
       try {
-        if (code != null) {
+        let token = null;
+        const isToken = await checkAuth();
+
+        if (!isToken && code) {
           token = await authenticateStrava(code);
-          if (token) {
-            setIsAuthorized(true);
-            window.history.replaceState(
-              {},
-              document.title,
-              window.location.pathname
-            );
-            const data = await getDataFromStrava();
-            setActivities(data);
-            setFilteredActivities(data);
+        }
+
+        if (isToken || token) {
+          setIsAuthorized(true);
+          if (status === 'idle') {
+            dispatch(fetchStravaData());
           }
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+        } else {
+          setIsAuthorized(false);
         }
       } catch (error) {
         console.error('Token exchange failed:', error);
@@ -39,7 +48,15 @@ export const useActivities = (initialState = { visibleCount: 12 }) => {
     };
 
     loadActivities();
-  }, []);
+  }, [status, dispatch]);
+
+  // Amikor az adatok sikeresen megérkeznek, frissítsük az állapotot
+  useEffect(() => {
+    if (status === 'succeeded' && data) {
+      setActivities(data);
+      setFilteredActivities(data);
+    }
+  }, [status, data]);
 
   const handleFilters = (year, month) => {
     if (!year && !month) {
@@ -74,5 +91,7 @@ export const useActivities = (initialState = { visibleCount: 12 }) => {
     isAuthorized,
     visibleCount,
     setVisibleCount,
+    status,
+    error,
   };
 };

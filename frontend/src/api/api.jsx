@@ -34,3 +34,37 @@ export const getDataFromStrava = async () => {
 
   return response.json();
 };
+
+export const getActivityDetails = async activityId => {
+  const response = await fetch(
+    `http://localhost:5000/api/activity/${activityId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    }
+  );
+
+  return response.json();
+};
+
+export const getActivityStream = async activityId => {
+  const response = await fetch(
+    `http://localhost:5000/api/stream/${activityId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    }
+  );
+
+  return response.json();
+};
+
+export const checkAuth = async () => {
+  const response = await fetch('http://localhost:5000/api/check-auth', {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  const data = await response.json();
+  return data.authenticated;
+};

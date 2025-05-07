@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import GPXViewerMap from "../GPXViewerMap/GPXViewerMap.component";
+import React, { useState, useEffect } from 'react';
+import GPXViewerMap from '../GPXViewerMap/GPXViewerMap.component';
+import { getActivityStream } from '../../../api/api';
 
 const ActivityGPX = ({ activityId }) => {
   const [gpxData, setGpxData] = useState(null);
@@ -8,38 +8,20 @@ const ActivityGPX = ({ activityId }) => {
 
   useEffect(() => {
     const fetchActivityStream = async () => {
-      const accessToken = localStorage.getItem("access_token");
-
-      if (!accessToken) {
-        setError("Access token is missing. Please authorize the application.");
-        return;
-      }
-
       try {
-        const response = await axios.get(
-          `https://www.strava.com/api/v3/activities/${activityId}/streams`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-            params: {
-              keys: "latlng,time,altitude",
-              key_by_type: true,
-            },
-          }
-        );
+        const response = await getActivityStream(activityId);
 
-        const { latlng, time, altitude } = response.data;
+        const { latlng, time, altitude } = response;
 
         if (!latlng || !latlng.data) {
-          setError("No GPS data available for this activity.");
+          setError('No GPS data available for this activity.');
           return;
         }
 
         const gpx = generateGPX(latlng.data, time?.data, altitude?.data);
         setGpxData(gpx);
       } catch (err) {
-        setError("Failed to fetch activity stream.");
+        setError('Failed to fetch activity stream.');
       }
     };
 
@@ -54,7 +36,9 @@ const ActivityGPX = ({ activityId }) => {
 
     latlngData.forEach((point, index) => {
       const [lat, lng] = point;
-      const time = timeData ? new Date(timeData[index] * 1000).toISOString() : null;
+      const time = timeData
+        ? new Date(timeData[index] * 1000).toISOString()
+        : null;
       const ele = altitudeData ? altitudeData[index] : null;
 
       gpx += `<trkpt lat="${lat}" lon="${lng}">\n`;
@@ -76,10 +60,10 @@ const ActivityGPX = ({ activityId }) => {
   const downloadGPX = () => {
     if (!gpxData) return;
 
-    const blob = new Blob([gpxData], { type: "application/gpx+xml" });
+    const blob = new Blob([gpxData], { type: 'application/gpx+xml' });
     const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
     link.download = `activity_${activityId}.gpx`;
     link.click();
@@ -89,14 +73,12 @@ const ActivityGPX = ({ activityId }) => {
 
   return (
     <div className="contianer">
-      <div className="gpx_map">
-        {/* <GPXViewerMap gpxUrl={ gpxData } /> */}
-      </div>
+      <div className="gpx_map">{/* <GPXViewerMap gpxUrl={ gpxData } /> */}</div>
       {error && <p>Error: {error}</p>}
       {gpxData ? (
         <div>
           <div className="gpx_map">
-            <GPXViewerMap gpxUrl={ gpxData } />
+            <GPXViewerMap gpxUrl={gpxData} />
           </div>
           <p>GPX data fetched successfully.</p>
           <button onClick={downloadGPX}>Download GPX File</button>

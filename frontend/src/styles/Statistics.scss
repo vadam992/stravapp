@@ -1,0 +1,18 @@
+.statistics {
+    display: flex;
+    flex-direction: row-reverse;
+    .yearly-stats {
+        margin: 20px 0;
+      
+        table {
+          border-collapse: collapse;
+          tr {
+            border-bottom: 1px solid #e5a333;
+            td {
+              padding: 15px 50px;
+            }
+          }
+        }
+      }
+      
+}
